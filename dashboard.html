@@ -92,6 +92,39 @@ h1 em{font-style:normal;color:var(--green)}
 @keyframes panelIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .tab-panel>section:first-child{margin-top:34px}
 
+/* ---------- sub-tabs (inside a panel) ---------- */
+.subtabbar{
+  display:flex;flex-wrap:wrap;gap:8px;margin-top:30px;
+  padding-bottom:14px;border-bottom:1px solid var(--line);
+}
+.subtab-btn{
+  font-family:'Heebo',sans-serif;font-weight:700;font-size:13.5px;color:var(--ink-soft);
+  background:var(--card);border:1px solid var(--line);border-radius:999px;cursor:pointer;
+  padding:7px 16px;transition:all .15s;white-space:nowrap;
+}
+.subtab-btn:hover{color:var(--ink);border-color:var(--green)}
+.subtab-btn.active{color:var(--paper);background:var(--green);border-color:var(--green)}
+.subtab-panel{display:none}
+.subtab-panel.active{display:block;animation:panelIn .25s ease}
+.subtab-panel>section:first-child{margin-top:30px}
+
+/* ---------- "no data in files" card ---------- */
+.nodata{
+  background:var(--card);border:1px dashed var(--terra);border-radius:10px;
+  padding:18px 20px;box-shadow:var(--shadow);position:relative;
+}
+.nodata h3{font-family:'Frank Ruhl Libre',serif;font-size:17px;font-weight:700;margin-bottom:4px}
+.nodata .tag{
+  display:inline-block;font-size:11px;font-weight:800;letter-spacing:.04em;color:var(--terra);
+  background:var(--terra-soft);border-radius:999px;padding:2px 11px;margin-bottom:9px;
+}
+.nodata p{font-size:13px;color:var(--ink-soft);line-height:1.5}
+.req-note{
+  background:var(--green-soft);border:1px solid var(--line);border-radius:10px;
+  padding:14px 18px;font-size:13.5px;color:var(--ink);line-height:1.55;margin-bottom:18px;
+}
+.req-note b{color:var(--green-deep)}
+
 /* ---------- section headers ---------- */
 section{margin-top:54px}
 .sec-head{display:flex;align-items:baseline;gap:16px;margin-bottom:6px}
@@ -278,6 +311,7 @@ code{background:var(--paper-deep);border-radius:4px;padding:0 5px;font-size:11.5
   <button class="tab-btn" data-tab="seniors">אזרחים ותיקים</button>
   <button class="tab-btn" data-tab="budget">תקציב</button>
   <button class="tab-btn" data-tab="place">השמות ומסגרות</button>
+  <button class="tab-btn" data-tab="req">מדדים מבוקשים</button>
 </nav>
 
 <div class="tab-panel active" id="panel-overview">
@@ -501,6 +535,126 @@ code{background:var(--paper-deep);border-radius:4px;padding:0 5px;font-size:11.5
 </section>
 
 </div><!-- /panel-place -->
+
+<div class="tab-panel" id="panel-req">
+<section style="margin-top:0">
+  <div class="sec-head"><span class="sec-no">10</span><h2>מדדים מבוקשים — לפי תחום</h2></div>
+  <p class="sec-desc">אוסף מדדי שירות ספציפיים שהתבקשו, מקובצים לשבעה תחומים. כל מספר נלקח ישירות מקובצי היצוא ומצוין בו קובץ המקור. מדד שאין לו נתון בקבצים מסומן במפורש בכרטיס "אין נתון בקבצים" — לא הומצא ולא הוערך דבר.</p>
+
+  <nav class="subtabbar" id="reqSubbar">
+    <button class="subtab-btn active" data-sub="sen">קשישים</button>
+    <button class="subtab-btn" data-sub="dis">מוגבלויות</button>
+    <button class="subtab-btn" data-sub="fam">משפחות</button>
+    <button class="subtab-btn" data-sub="youth">חוק נוער</button>
+    <button class="subtab-btn" data-sub="court">סדרי דין</button>
+    <button class="subtab-btn" data-sub="dv">אלמ"ב (מהד"ס)</button>
+    <button class="subtab-btn" data-sub="couple">טיפול זוגי ומשפחתי</button>
+  </nav>
+
+  <!-- ===== קשישים ===== -->
+  <div class="subtab-panel active" id="sub-sen">
+    <div class="req-note">מבוקש: <b>מספר משפחות בזקנה ומצבם</b>. בקבצים אין ספירה של "משפחות בזקנה" כיחידה משפחתית — נתוני הוותיקים מוחזקים ברמת הפרט (אזרחים ותיקים). מוצגים להלן הנתונים הקיימים: היקף האוכלוסייה, מצב תפקודי ("מצבם") ומצב משפחתי.</div>
+    <div class="kpi-grid" id="senKpis"></div>
+    <div class="grid-2" style="margin-top:16px">
+      <div class="card">
+        <span class="src">מקור: C142</span>
+        <h3>מצב תפקודי של ותיקים ("מצבם")</h3>
+        <div class="sub">ותיקים הרשומים ברווחה, לפי רמת תפקוד</div>
+        <div class="chart-box" style="height:240px"><canvas id="senFuncChart"></canvas></div>
+      </div>
+      <div class="card">
+        <span class="src">מקור: C137</span>
+        <h3>מצב משפחתי של ותיקים</h3>
+        <div class="sub">מספר אזרחים ותיקים לפי מצב משפחתי</div>
+        <div class="tbl-wrap"><table class="data" id="senMaritalTable"></table></div>
+      </div>
+    </div>
+    <p class="sec-desc" style="margin-top:14px">לנתוני ותיקים מלאים (תחזית, פירמידת גיל, סיעוד, בדידות, קהילה תומכת) ראו לשונית <b>"אזרחים ותיקים"</b>.</p>
+  </div>
+
+  <!-- ===== מוגבלויות ===== -->
+  <div class="subtab-panel" id="sub-dis">
+    <div class="req-note">מבוקש: <b>נתוני מוגבלויות והצגת העלייה בנתוני אוטיזם</b>. ⚠️ בקבצים <b>אין נתוני זמן/היסטוריה</b> לאוטיזם — לכן <b>לא ניתן להציג מגמת עלייה לאורך זמן</b>. מוצג תצלום מצב נוכחי בלבד (נכון לקובץ 11.06.2026).</div>
+    <div class="kpi-grid" id="disKpis"></div>
+    <div class="grid-2" style="margin-top:16px">
+      <div class="card">
+        <span class="src">מקור: C111</span>
+        <h3>אבחנות ברצף האוטיסטי (ASD) — מקבלי שירות</h3>
+        <div class="sub">מספר מקבלי שירות לפי סוג האבחנה (תצלום מצב, ללא מימד זמן)</div>
+        <div class="chart-box" style="height:200px"><canvas id="autismChart"></canvas></div>
+      </div>
+      <div class="card">
+        <span class="src">מקור: C124</span>
+        <h3>השמות במסגרות ייעודיות לאוטיזם</h3>
+        <div class="sub">מושמים במסגרות שיחידתן "אוטיסטים" (כולם מושמים ברשויות אחרות)</div>
+        <div class="tbl-wrap"><table class="data" id="autismPlaceTable"></table></div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <span class="src">מקור: C111</span>
+      <h3>מאפייני מוגבלות בקרב מקבלי שירות</h3>
+      <div class="sub">אשכול "מוגבלות גופנית, חושית, נירו-קוגנטיבית או נפשית" · מקבל שירות יכול להופיע ביותר ממאפיין אחד</div>
+      <div class="chart-box" style="height:380px"><canvas id="disCharsChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ===== משפחות ===== -->
+  <div class="subtab-panel" id="sub-fam">
+    <div class="req-note">מבוקש: <b>ועדות פעוטות בסיכון</b>, <b>ועדות תכנון טיפול</b>, <b>ילדים בפנימיות</b>.</div>
+    <div class="grid-2">
+      <div class="nodata"><span class="tag">אין נתון בקבצים</span><h3>מספר ועדות פעוטות בסיכון</h3>
+        <p>לא נמצאה בקבצי היצוא ספירה של ועדות פעוטות בסיכון (גם לא המונחים "ועדה" / "פעוטות" כנתון מנייה).</p></div>
+      <div class="nodata"><span class="tag">אין נתון בקבצים</span><h3>מספר ועדות תכנון טיפול</h3>
+        <p>לא נמצאה בקבצי היצוא ספירה של ועדות תכנון טיפול. לפי ההערה שצורפה לבקשה — ניתן לבקש את הנתון מנילי שרלו.</p></div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <span class="src">מקור: C124</span>
+      <h3>ילדים ובוגרים בפנימיות (השמות חוץ-ביתיות)</h3>
+      <div class="sub">השמה בסוג מסגרת "פנימיה", לפי יחידה. ילד ונוער = <b id="boardKids"></b> מושמים. שאר השורות הן פנימיות מוגבלויות/חסות נוער/ותיקים</div>
+      <div class="tbl-wrap"><table class="data" id="boardTable"></table></div>
+    </div>
+  </div>
+
+  <!-- ===== חוק נוער ===== -->
+  <div class="subtab-panel" id="sub-youth">
+    <div class="req-note">מבוקש: <b>דיווחים לחוק נוער</b>, <b>צווי הוצאה ממשמורת והשגחה בקהילה</b>. לפי ההערה שצורפה — נושא זה יישלח במייל נפרד.</div>
+    <div class="grid-2">
+      <div class="nodata"><span class="tag">אין נתון בקבצים</span><h3>מספר דיווחים לחוק נוער</h3>
+        <p>לא נמצאה בקבצי היצוא ספירה של דיווחים לחוק נוער.</p></div>
+      <div class="nodata"><span class="tag">אין נתון בקבצים</span><h3>מספר צווי הוצאה ממשמורת והשגחה בקהילה</h3>
+        <p>לא נמצאה בקבצי היצוא ספירה של צווי הוצאה ממשמורת או השגחה בקהילה.</p></div>
+    </div>
+    <div class="req-note" id="youthFoot" style="margin-top:16px;background:var(--paper-deep)"></div>
+  </div>
+
+  <!-- ===== סדרי דין ===== -->
+  <div class="subtab-panel" id="sub-court">
+    <div class="req-note">מבוקש: <b>תסקירי אפוטרופסות</b>, <b>תסקירי אישות</b>. לפי ההערה שצורפה — ניתן לבקש מחבצלת.</div>
+    <div class="grid-2">
+      <div class="nodata"><span class="tag">אין נתון בקבצים</span><h3>מספר תסקירי אפוטרופסות</h3>
+        <p>לא נמצאה בקבצי היצוא ספירה של תסקירי אפוטרופסות.</p></div>
+      <div class="nodata"><span class="tag">אין נתון בקבצים</span><h3>מספר תסקירי אישות</h3>
+        <p>המונח "אישות" אינו מופיע באף קובץ יצוא; אין נתון לתסקירי אישות.</p></div>
+    </div>
+    <div class="req-note" id="courtFoot" style="margin-top:16px;background:var(--paper-deep)"></div>
+  </div>
+
+  <!-- ===== אלמ"ב ===== -->
+  <div class="subtab-panel" id="sub-dv">
+    <div class="req-note">מבוקש (אלמ"ב / מהד"ס): <b>מספר מטופלים והערכות מסוכנות</b>. בקבצים המסגרת מופיעה בשם הכללי "מרכז למניעת אלימות".</div>
+    <div class="kpi-grid" id="dvKpis"></div>
+    <div class="nodata" style="margin-top:16px"><span class="tag">אין נתון בקבצים</span><h3>מספר הערכות מסוכנות</h3>
+      <p>לא נמצאה בקבצי היצוא ספירה של הערכות מסוכנות.</p></div>
+  </div>
+
+  <!-- ===== טיפול זוגי ומשפחתי ===== -->
+  <div class="subtab-panel" id="sub-couple">
+    <div class="req-note">מבוקש (מליאורה — טיפול זוגי ומשפחתי): <b>מספר מקבלי שירות</b>. בקבצים המסגרת מופיעה בשם הכללי "תחנה לטיפול המשפחה".</div>
+    <div class="kpi-grid" id="coupleKpis"></div>
+  </div>
+
+</section>
+</div><!-- /panel-req -->
 
 <!-- ================= FOOTER ================= -->
 <footer>
@@ -940,6 +1094,89 @@ document.getElementById('fwTable').innerHTML =
   D.frameworks.map(f=>`<tr><td class="name">${f.name}</td><td>${f.program}</td><td>${f.type}</td><td>${f.arrangement}</td>
     <td style="font-size:11px">${f.admin.replace('מינהל ','')}</td><td><b>${fmt(f.total)}</b></td><td>${fmt(f.local)}</td><td>${fmt(f.other)}</td></tr>`).join('')+'</tbody>';
 
+/* ============ Requested indicators ============ */
+const R = D.requested;
+const kpiCards = arr => arr.map(k=>
+  `<div class="kpi ${k.cls||''}"><div class="label">${k.label}</div><div class="value num">${k.value}</div><div class="ctx">${k.ctx||''}</div></div>`).join('');
+
+/* --- קשישים --- */
+const senFuncTotal = D.senior_function.reduce((s,f)=>s+f.n,0);
+const atRisk = (D.senior_function.find(f=>f.level.includes('סיכון'))||{n:0}).n;
+document.getElementById('senKpis').innerHTML = kpiCards([
+  {label:'תחזית אוכלוסיית ותיקים 2026', value:fmt(D.senior_forecast[0].n), ctx:'צפי ל־2035: '+fmt(D.senior_forecast[D.senior_forecast.length-1].n)+' (C134)', cls:'gold'},
+  {label:'ותיקים רשומים ברווחה', value:fmt(R.senior_marital_total), ctx:'לפי מצב משפחתי (C137)', cls:''},
+  {label:'ותיקים עם מצב תפקודי מדווח', value:fmt(senFuncTotal), ctx:'רשומים ברווחה לפי רמת תפקוד (C142)', cls:''},
+  {label:'ותיקים במצב "בסיכון/פגיעות"', value:fmt(atRisk), ctx:'רמת התפקוד הנמוכה ביותר (C142)', cls:'alt'},
+]);
+mkChart(document.getElementById('senFuncChart'),{
+  type:'bar',
+  data:{labels:D.senior_function.map(f=>f.level), datasets:[{data:D.senior_function.map(f=>f.n), backgroundColor:[C.green,C.greenLight,C.gold,C.terra], borderRadius:4}]},
+  options:{...RTL, indexAxis:'y', maintainAspectRatio:false,
+    plugins:{legend:{display:false}, tooltip:{...tt, callbacks:{label:c=>fmt(c.parsed.x)+' ותיקים'}}},
+    scales:{y:{grid:{display:false}}}}
+});
+document.getElementById('senMaritalTable').innerHTML =
+  '<thead><tr><th>מצב משפחתי</th><th>מספר ותיקים</th></tr></thead><tbody>'+
+  R.senior_marital.map(r=>`<tr><td class="name">${r.status}</td><td>${fmt(r.n)}</td></tr>`).join('')+
+  `<tr class="total-row"><td>סה"כ (סכום מחושב)</td><td>${fmt(R.senior_marital_total)}</td></tr></tbody>`;
+
+/* --- מוגבלויות --- */
+const asdDiag = (R.autism.find(a=>a.label.includes('מאובחנות'))||{n:0}).n;
+const autismPlaceTotal = R.autism_placements.reduce((s,p)=>s+p.total,0);
+document.getElementById('disKpis').innerHTML = kpiCards([
+  {label:'אנשים עם מוגבלות מקבלי שירות', value:fmt(R.disabled_t20_total), ctx:'סכום 14 היישובים (T20)', cls:''},
+  {label:'אבחנות ASD (כולל יסוד סביר)', value:fmt(R.autism_total), ctx:'מקבלי שירות, תצלום מצב (C111)', cls:'alt'},
+  {label:'אבחנת ASD ודאית', value:fmt(asdDiag), ctx:'"הפרעות מאובחנות ברצף האוטיסטי" (C111)', cls:'alt'},
+  {label:'מושמים במסגרות אוטיזם', value:fmt(autismPlaceTotal), ctx:'כולם ברשויות אחרות (C124)', cls:''},
+]);
+mkChart(document.getElementById('autismChart'),{
+  type:'bar',
+  data:{labels:R.autism.map(a=>a.label.replace(' (ASD)','')), datasets:[{data:R.autism.map(a=>a.n), backgroundColor:[C.terra,C.terraLight,C.gold], borderRadius:4}]},
+  options:{...RTL, indexAxis:'y', maintainAspectRatio:false,
+    plugins:{legend:{display:false}, tooltip:{...tt, callbacks:{label:c=>fmt(c.parsed.x)+' מקבלי שירות'}}},
+    scales:{y:{grid:{display:false},ticks:{font:{size:11}}}}}
+});
+document.getElementById('autismPlaceTable').innerHTML =
+  '<thead><tr><th>סוג מסגרת</th><th>מושמים</th></tr></thead><tbody>'+
+  R.autism_placements.map(p=>`<tr><td class="name">${p.type}</td><td>${fmt(p.total)}</td></tr>`).join('')+
+  `<tr class="total-row"><td>סה"כ (סכום מחושב)</td><td>${fmt(autismPlaceTotal)}</td></tr></tbody>`;
+const disChars = R.disability_chars.slice(0,14);
+mkChart(document.getElementById('disCharsChart'),{
+  type:'bar',
+  data:{labels:disChars.map(d=>d.label.length>44?d.label.slice(0,42)+'…':d.label),
+    datasets:[{data:disChars.map(d=>d.n), backgroundColor:disChars.map(d=>d.label.includes('האוטיסטי')?C.terra:C.green), borderRadius:4}]},
+  options:{...RTL, indexAxis:'y', maintainAspectRatio:false,
+    plugins:{legend:{display:false}, tooltip:{...tt, callbacks:{title:i=>disChars[i[0].dataIndex].label, label:c=>fmt(c.parsed.x)+' מקבלי שירות'}}},
+    scales:{y:{ticks:{font:{size:11}},grid:{display:false}}}}
+});
+
+/* --- משפחות (פנימיות) --- */
+const boardKids = (R.boarding.find(b=>b.unit==='ילד ונוער')||{total:0}).total;
+document.getElementById('boardKids').textContent = fmt(boardKids);
+const boardTotal = R.boarding.reduce((s,b)=>s+b.total,0);
+document.getElementById('boardTable').innerHTML =
+  '<thead><tr><th>יחידה</th><th>מינהל</th><th>בתוך המועצה</th><th>ברשויות אחרות</th><th>סה"כ</th></tr></thead><tbody>'+
+  R.boarding.map(b=>`<tr><td class="name">${b.unit}</td><td style="font-size:11px">${b.admin.replace('מינהל ','')}</td><td>${fmt(b.here)}</td><td>${fmt(b.other)}</td><td><b>${fmt(b.total)}</b></td></tr>`).join('')+
+  `<tr class="total-row"><td>סה"כ (סכום מחושב)</td><td>—</td><td>${fmt(R.boarding.reduce((s,b)=>s+b.here,0))}</td><td>${fmt(R.boarding.reduce((s,b)=>s+b.other,0))}</td><td>${fmt(boardTotal)}</td></tr></tbody>`;
+
+/* --- חוק נוער / סדרי דין footnotes --- */
+document.getElementById('youthFoot').innerHTML =
+  'הנתון היחיד בקבצים הקרוב לתחום: בקובץ <b>T22</b> קיים ערך <b>'+fmt1(R.t22_ratios.youth_law*100)+'%</b> בעמודה שכותרתה "חוק נוער" — הקובץ אינו מגדיר מה הערך מודד (ככל הנראה יחס/אחוז, לא ספירת דיווחים), ולכן אינו מוצג כמדד. השמות בחסות הנוער מופיעות בלשונית "השמות ומסגרות".';
+document.getElementById('courtFoot').innerHTML =
+  'הנתונים היחידים בקבצים הקרובים לתחום: בקובץ <b>C123</b> מופיעה <b>'+fmt(R.court_report_inquiries)+'</b> פנייה מסוג "בתי משפט כתיבת תסקיר", ובקובץ <b>T22</b> ערך <b>'+R.t22_ratios.court_orders+'</b> בעמודה "סדרי דין" — ללא הגדרה בקובץ למה הוא מודד ואין פירוט לפי סוג תסקיר (אפוטרופסות/אישות).';
+
+/* --- אלמ"ב --- */
+const dvN = R.violence_center.reduce((s,v)=>s+v.total,0);
+document.getElementById('dvKpis').innerHTML = kpiCards([
+  {label:'מטופלים — מרכז למניעת אלימות', value:fmt(dvN), ctx:'מושמים בקהילה, רווחת הפרט והמשפחה (C124)', cls:'alt'},
+]);
+
+/* --- טיפול זוגי ומשפחתי --- */
+const fs = R.family_station[0]||{here:0,total:0};
+document.getElementById('coupleKpis').innerHTML = kpiCards([
+  {label:'מקבלי שירות — תחנה לטיפול המשפחה', value:fmt(fs.here), ctx:'מטופלים במסגרת שבמועצה (C124)' + (fs.total>fs.here?' · '+fmt(fs.total)+' כולל מטופלים במסגרות ברשויות אחרות (C126)':''), cls:''},
+]);
+
 /* ============ Tabs ============ */
 const tabBtns = document.querySelectorAll('.tab-btn');
 function showTab(id){
@@ -956,6 +1193,16 @@ function showTab(id){
   history.replaceState(null,'','#'+id);
 }
 tabBtns.forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
+
+/* sub-tabs inside the "מדדים מבוקשים" panel */
+const subBtns = document.querySelectorAll('#reqSubbar .subtab-btn');
+subBtns.forEach(b=>b.addEventListener('click',()=>{
+  const id=b.dataset.sub;
+  subBtns.forEach(x=>x.classList.toggle('active', x===b));
+  document.querySelectorAll('.subtab-panel').forEach(p=>p.classList.toggle('active', p.id==='sub-'+id));
+  requestAnimationFrame(()=>allCharts.forEach(c=>{ try{ c.resize(); }catch(e){} }));
+}));
+
 const validTabs = [...tabBtns].map(b=>b.dataset.tab);
 const initialTab = location.hash.replace('#','');
 if(validTabs.includes(initialTab) && initialTab!=='overview') showTab(initialTab);

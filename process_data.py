@@ -176,6 +176,78 @@ for r in t30:
                'other': num(r['מספר מושמים  מרשויות אחרות']) or 0})
 out['frameworks'] = sorted(fw, key=lambda x: -x['total'])
 
+# ---------- Requested management indicators ----------
+# A set of specific service figures asked for by management, grouped by domain.
+# Every value is taken straight from a source file; where a requested figure has
+# no corresponding number in any export, it is flagged exists:false (nothing invented).
+req = {}
+
+# --- Seniors: condition of the older population (per individual; the files hold
+#     no "number of families in old age" as a family-unit count) ---
+req['senior_marital'] = [{'status': r['מצב משפחתי'].strip(), 'n': num(r['מספר אזרחים ותיקים'])} for r in load('C137')]
+req['senior_marital_total'] = sum(x['n'] for x in req['senior_marital'])
+# senior_function (C142, "their condition") and senior_forecast (C134) already in `out`
+
+# --- Disabilities & autism (C111 = all active service recipients by characteristic) ---
+c111 = load('C111')
+DIS_CLUSTER = 'מוגבלות גופנית, חושית, נירו-קוגנטיבית או נפשית'
+req['autism'] = [{'label': r['מאפיין'].strip(), 'n': num(r['מקבלי שירות'])}
+                 for r in c111 if 'האוטיסטי' in r['מאפיין']]
+req['autism_total'] = sum(x['n'] for x in req['autism'])
+req['disability_chars'] = sorted([{'label': r['מאפיין'].strip(), 'n': num(r['מקבלי שירות'])}
+                 for r in c111 if r['אשכול'].strip() == DIS_CLUSTER], key=lambda x: -x['n'])
+req['disability_chars_total'] = sum(x['n'] for x in req['disability_chars'])
+req['disabled_t20_total'] = sum(t['disabled'] or 0 for t in towns)
+# No time dimension exists in any file -> a "rise in autism" trend cannot be drawn.
+req['autism_trend_exists'] = False
+
+# --- Placement helper over C124 (placements in the council's own frameworks
+#     "ברשות הנוכחית" vs. council residents placed elsewhere "ברשות אחרת") ---
+c124 = load('C124')
+def c124_rows(pred):
+    out_rows = []
+    for r in c124:
+        if not pred(r):
+            continue
+        here = num(r['מושמים ברשות הנוכחית']) or 0
+        other = num(r['מושמים ברשות אחרת']) or 0
+        out_rows.append({'type': r['סוג מסגרת'].strip(), 'unit': r['UNIT_DESC'].strip(),
+                         'admin': r['ADMIN_DESC'].strip(), 'arr': r['Arrangement_Type_Descr'].strip(),
+                         'here': here, 'other': other, 'total': here + other})
+    return sorted(out_rows, key=lambda x: -x['total'])
+
+# Families: children in boarding schools (סוג מסגרת = פנימיה), broken down by unit
+req['boarding'] = c124_rows(lambda r: r['סוג מסגרת'].strip() == 'פנימיה')
+# Families: at-risk-infants committees & treatment-planning committees -> not in files
+req['committees_exists'] = False
+
+# Domestic-violence centre (אלמ"ב / מהד"ס) = "מרכז למניעת אלימות"
+req['violence_center'] = c124_rows(lambda r: 'מניעת אלימות' in r['סוג מסגרת'])
+req['violence_assessments_exists'] = False  # "הערכות מסוכנות" appears in no file
+
+# Couples & family therapy (מליאורה) = "תחנה לטיפול המשפחה"
+req['family_station'] = c124_rows(lambda r: 'תחנה לטיפול המשפחה' in r['סוג מסגרת'])
+
+# Autism-designated framework placements (unit = אוטיסטים)
+req['autism_placements'] = c124_rows(lambda r: r['UNIT_DESC'].strip() == 'אוטיסטים')
+
+# Youth-law reports / custody-removal orders, guardianship & matrimonial court
+# reports: searched every export, no count exists for any of these.
+req['youth_law_reports_exists'] = False
+req['custody_orders_exists'] = False
+req['guardianship_reports_exists'] = False
+req['matrimonial_reports_exists'] = False
+# The only related figures: C123 inquiry "בתי משפט כתיבת תסקיר" and the unlabeled
+# ratios in T22; surfaced verbatim so nothing is implied beyond what the file states.
+c123 = load('C123')
+court_inq = [r for r in c123 if 'תסקיר' in r['סיבה']]
+req['court_report_inquiries'] = num(court_inq[0]['פניות']) if court_inq else None
+t22 = load('T22')[0]
+req['t22_ratios'] = {'youth_law': num(t22['חוק נוער']), 'protection': num(t22['הגנה על חוסים']),
+                     'mashe': num(t22['משה']), 'court_orders': num(t22['סדרי דין'])}
+
+out['requested'] = req
+
 # ---------- GeoJSON: close LineStrings into polygons ----------
 GEO_NAMES = {
     'alon_shvut': 'אלון שבות', 'elazar': 'אלעזר', 'bat_ayin': 'בת עין', 'har_gilo': 'הר גילה',
