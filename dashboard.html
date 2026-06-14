@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>תמונת מצב רווחה וקהילה — מועצה אזורית גוש עציון</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700;900&family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+:root{
+  --paper:#f6f2e9;
+  --paper-deep:#efe9da;
+  --card:#fffdf8;
+  --line:#ddd3bc;
+  --line-soft:#e9e2d0;
+  --ink:#22301f;
+  --ink-soft:#5c6653;
+  --green:#2f5d3a;
+  --green-deep:#24472d;
+  --green-soft:#e3ead9;
+  --terra:#b9552b;
+  --terra-soft:#f3e0d3;
+  --gold:#a98a3f;
+  --shadow:0 1px 2px rgba(44,54,34,.06),0 8px 24px -12px rgba(44,54,34,.18);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:'Heebo',sans-serif;
+  font-size:15px;
+  line-height:1.55;
+  background-image:radial-gradient(rgba(120,105,60,.05) 1px, transparent 1px);
+  background-size:22px 22px;
+}
+.wrap{max-width:1240px;margin:0 auto;padding:0 28px 80px}
+.num{font-variant-numeric:tabular-nums}
+
+/* ---------- masthead ---------- */
+.masthead{
+  border-bottom:3px double var(--line);
+  padding:42px 0 26px;
+  margin-bottom:30px;
+  position:relative;
+}
+.masthead::before{
+  content:"";position:absolute;inset-inline:0;top:0;height:6px;
+  background:linear-gradient(90deg,var(--green) 0 25%,var(--gold) 25% 50%,var(--terra) 50% 75%,var(--green-deep) 75% 100%);
+}
+.mast-kicker{
+  display:flex;align-items:center;gap:14px;
+  font-size:12.5px;font-weight:600;letter-spacing:.14em;color:var(--ink-soft);
+  text-transform:uppercase;margin-bottom:10px;
+}
+.mast-kicker::after{content:"";flex:1;height:1px;background:var(--line)}
+h1{
+  font-family:'Frank Ruhl Libre',serif;font-weight:900;
+  font-size:clamp(34px,4.6vw,52px);line-height:1.12;letter-spacing:-0.01em;
+}
+h1 em{font-style:normal;color:var(--green)}
+.mast-sub{margin-top:12px;font-size:16px;color:var(--ink-soft);max-width:760px}
+.mast-meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.chip{
+  display:inline-flex;align-items:center;gap:7px;
+  background:var(--card);border:1px solid var(--line);border-radius:999px;
+  padding:5px 14px;font-size:12.5px;font-weight:600;color:var(--ink-soft);
+}
+.chip b{color:var(--ink);font-weight:700}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--green)}
+
+/* ---------- tabs ---------- */
+.tabbar{
+  position:sticky;top:0;z-index:1100;display:flex;gap:2px;
+  background:rgba(246,242,233,.95);backdrop-filter:blur(8px);
+  border-bottom:2px solid var(--ink);margin-top:26px;
+  overflow-x:auto;scrollbar-width:none;
+}
+.tabbar::-webkit-scrollbar{display:none}
+.tab-btn{
+  font-family:'Heebo',sans-serif;font-weight:700;font-size:14.5px;color:var(--ink-soft);
+  background:transparent;border:none;cursor:pointer;white-space:nowrap;
+  padding:12px 18px 13px;border-bottom:3px solid transparent;margin-bottom:-2px;
+  transition:color .15s,border-color .15s;
+}
+.tab-btn:hover{color:var(--ink)}
+.tab-btn.active{color:var(--green-deep);border-bottom-color:var(--green)}
+.tab-panel{display:none}
+.tab-panel.active{display:block;animation:panelIn .25s ease}
+@keyframes panelIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.tab-panel>section:first-child{margin-top:34px}
+
+/* ---------- section headers ---------- */
+section{margin-top:54px}
+.sec-head{display:flex;align-items:baseline;gap:16px;margin-bottom:6px}
+.sec-no{
+  font-family:'Frank Ruhl Libre',serif;font-weight:700;font-size:15px;
+  color:var(--paper);background:var(--green);border-radius:4px;
+  padding:2px 10px;letter-spacing:.06em;
+}
+h2{font-family:'Frank Ruhl Libre',serif;font-weight:700;font-size:27px}
+.sec-desc{color:var(--ink-soft);font-size:14px;margin-bottom:18px;max-width:860px}
+
+/* ---------- cards ---------- */
+.card{
+  background:var(--card);border:1px solid var(--line);border-radius:10px;
+  box-shadow:var(--shadow);padding:20px 22px;position:relative;
+}
+.card h3{font-family:'Frank Ruhl Libre',serif;font-size:18px;font-weight:700;margin-bottom:2px}
+.card .sub{font-size:12.5px;color:var(--ink-soft);margin-bottom:14px}
+.src{
+  position:absolute;top:14px;left:16px;
+  font-size:10.5px;font-weight:700;letter-spacing:.08em;color:#9a9072;
+  border:1px solid var(--line-soft);border-radius:4px;padding:1px 7px;background:var(--paper);
+}
+
+/* ---------- KPI ---------- */
+.kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:14px}
+@media(max-width:1080px){.kpi-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:640px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+.kpi{
+  background:var(--card);border:1px solid var(--line);border-radius:10px;
+  padding:16px 18px 14px;box-shadow:var(--shadow);
+  border-top:3px solid var(--green);
+  display:flex;flex-direction:column;gap:2px;
+}
+.kpi.alt{border-top-color:var(--terra)}
+.kpi.gold{border-top-color:var(--gold)}
+.kpi .label{font-size:12.5px;font-weight:600;color:var(--ink-soft);line-height:1.3}
+.kpi .value{
+  font-family:'Frank Ruhl Libre',serif;font-weight:900;font-size:31px;line-height:1.1;
+  margin-top:4px;font-variant-numeric:tabular-nums;
+}
+.kpi .ctx{font-size:11.5px;color:var(--ink-soft);margin-top:4px;line-height:1.4}
+.kpi .ctx b{color:var(--green-deep)}
+.kpi .ctx b.warn{color:var(--terra)}
+
+/* ---------- insights ---------- */
+.insight-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+@media(max-width:1080px){.insight-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:640px){.insight-grid{grid-template-columns:1fr}}
+.insight{
+  border-radius:10px;border:1px solid var(--line);background:var(--card);
+  padding:18px 18px 14px;box-shadow:var(--shadow);position:relative;overflow:hidden;
+}
+.insight::before{content:"";position:absolute;inset-inline-start:0;top:0;bottom:0;width:4px;background:var(--green)}
+.insight.warn::before{background:var(--terra)}
+.insight .big{
+  font-family:'Frank Ruhl Libre',serif;font-weight:900;font-size:34px;line-height:1;
+  color:var(--green-deep);font-variant-numeric:tabular-nums;
+}
+.insight.warn .big{color:var(--terra)}
+.insight p{font-size:13.5px;margin-top:8px;line-height:1.5}
+.insight .isrc{display:inline-block;margin-top:10px;font-size:10.5px;font-weight:700;letter-spacing:.06em;color:#9a9072}
+
+/* ---------- map ---------- */
+.map-card{padding:0;overflow:hidden}
+.map-layout{display:grid;grid-template-columns:1fr 320px;min-height:640px}
+@media(max-width:920px){.map-layout{grid-template-columns:1fr}}
+#map{min-height:640px;background:#e8e4d8}
+.map-side{border-inline-start:1px solid var(--line);display:flex;flex-direction:column;background:var(--card)}
+.map-controls{padding:16px 18px 12px;border-bottom:1px solid var(--line-soft)}
+.map-controls label{font-size:12px;font-weight:700;color:var(--ink-soft);display:block;margin-bottom:6px;letter-spacing:.04em}
+.map-controls select{
+  width:100%;font-family:'Heebo';font-size:14px;font-weight:600;color:var(--ink);
+  padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--paper);
+}
+.legend{display:flex;align-items:center;gap:0;margin-top:12px;border-radius:6px;overflow:hidden;border:1px solid var(--line)}
+.legend div{flex:1;height:14px}
+.legend-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--ink-soft);margin-top:4px}
+.town-list{flex:1;overflow-y:auto;max-height:430px}
+.town-row{
+  display:flex;align-items:center;gap:10px;padding:9px 18px;cursor:pointer;
+  border-bottom:1px solid var(--line-soft);transition:background .15s;
+}
+.town-row:hover{background:var(--green-soft)}
+.town-row .t-name{font-weight:600;font-size:13.5px;flex:1;white-space:nowrap}
+.town-row .t-val{font-weight:700;font-size:13.5px;font-variant-numeric:tabular-nums;color:var(--green-deep);min-width:52px;text-align:left}
+.town-row .t-bar{height:5px;border-radius:3px;background:var(--green);opacity:.85}
+.map-note{padding:10px 18px;font-size:11.5px;color:var(--ink-soft);border-top:1px solid var(--line-soft);background:var(--paper)}
+.leaflet-popup-content-wrapper{
+  border-radius:10px;font-family:'Heebo';direction:rtl;text-align:right;
+  background:var(--card);color:var(--ink);box-shadow:0 12px 40px -8px rgba(34,48,31,.35);
+}
+.leaflet-popup-content{margin:14px 18px;min-width:230px}
+.pop-title{font-family:'Frank Ruhl Libre',serif;font-weight:900;font-size:19px;margin-bottom:2px}
+.pop-sub{font-size:11px;color:var(--ink-soft);margin-bottom:8px}
+.pop-table{width:100%;font-size:12.5px;border-collapse:collapse}
+.pop-table td{padding:3px 0;border-bottom:1px dashed var(--line-soft)}
+.pop-table td:last-child{text-align:left;font-weight:700;font-variant-numeric:tabular-nums}
+.pop-table tr.hl td{color:var(--green-deep)}
+
+/* ---------- table ---------- */
+.tbl-wrap{overflow-x:auto}
+table.data{width:100%;border-collapse:collapse;font-size:13.5px;background:var(--card)}
+table.data thead th{
+  font-size:12px;font-weight:700;color:var(--ink-soft);text-align:right;
+  padding:10px 12px;border-bottom:2px solid var(--ink);cursor:pointer;user-select:none;
+  white-space:nowrap;background:var(--paper-deep);
+}
+table.data thead th:hover{color:var(--green-deep)}
+table.data thead th.sorted{color:var(--green-deep)}
+table.data thead th .arrow{font-size:10px}
+table.data td{
+  padding:8px 12px;border-bottom:1px solid var(--line-soft);
+  font-variant-numeric:tabular-nums;white-space:nowrap;
+}
+table.data tbody tr:hover{background:var(--green-soft)}
+table.data td.name{font-weight:700}
+table.data tr.total-row td{font-weight:800;border-top:2px solid var(--ink);background:var(--paper-deep)}
+.cell-bar{display:inline-block;height:6px;border-radius:3px;background:var(--green);vertical-align:middle;margin-inline-start:8px;opacity:.7}
+.muted{color:var(--ink-soft);font-weight:400;font-size:11px}
+
+/* ---------- grids ---------- */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.grid-23{display:grid;grid-template-columns:1.45fr 1fr;gap:16px}
+@media(max-width:920px){.grid-2,.grid-3,.grid-23{grid-template-columns:1fr}}
+.chart-box{position:relative;width:100%}
+
+/* ---------- mini stats ---------- */
+.stat-trio{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:8px}
+.stat-trio .st{
+  background:var(--paper);border:1px solid var(--line-soft);border-radius:8px;
+  padding:12px 10px;text-align:center;
+}
+.stat-trio .st .v{font-family:'Frank Ruhl Libre',serif;font-weight:900;font-size:26px;color:var(--terra)}
+.stat-trio .st .l{font-size:11px;color:var(--ink-soft);line-height:1.35;margin-top:2px}
+
+/* occupancy */
+.occ-bar{height:26px;border-radius:7px;background:var(--paper-deep);border:1px solid var(--line);overflow:hidden;position:relative;margin-top:10px}
+.occ-fill{height:100%;background:linear-gradient(90deg,var(--terra),#d98a55);border-radius:0 7px 7px 0;display:flex;align-items:center;justify-content:flex-end;padding-inline:10px;color:#fff;font-weight:800;font-size:13px}
+.occ-scale{display:flex;justify-content:space-between;font-size:11px;color:var(--ink-soft);margin-top:4px}
+
+/* plan vs exec table */
+.delta-pos{color:var(--green-deep);font-weight:700}
+.delta-neg{color:var(--terra);font-weight:700}
+
+/* footer */
+footer{
+  margin-top:70px;border-top:3px double var(--line);padding-top:24px;
+  font-size:12.5px;color:var(--ink-soft);
+}
+footer h4{font-family:'Frank Ruhl Libre',serif;font-size:16px;color:var(--ink);margin-bottom:8px}
+footer ul{list-style:none;display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:4px 26px}
+footer li{padding:2px 0}
+footer .method{margin-top:16px;padding:14px 16px;background:var(--card);border:1px solid var(--line);border-radius:8px;max-width:880px}
+code{background:var(--paper-deep);border-radius:4px;padding:0 5px;font-size:11.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ================= MASTHEAD ================= -->
+<header class="masthead">
+  <div class="mast-kicker">לוח מחוונים ניהולי · אגף רווחה ושירותים חברתיים</div>
+  <h1>תמונת מצב <em>רווחה וקהילה</em><br>מועצה אזורית גוש עציון</h1>
+  <p class="mast-sub">סיכום חזותי של נתוני הרווחה, האזרחים הוותיקים, התקציב וההשמות — לפי יישוב ולפי תחום. כל הנתונים לקוחים ישירות מקובצי היצוא; ערכים מחושבים (סכומים ויחסים) מסומנים ככאלה.</p>
+  <div class="mast-meta">
+    <span class="chip"><span class="dot"></span>נתוני יצוא: <b>11.06.2026</b></span>
+    <span class="chip">גמלאות ביטוח לאומי: <b>05/2026</b></span>
+    <span class="chip">14 יישובים בנתונים · 14 שכבות מפה</span>
+  </div>
+</header>
+
+<!-- ================= KPI ================= -->
+<section id="kpis" style="margin-top:0">
+  <div class="kpi-grid" id="kpiGrid"></div>
+</section>
+
+<!-- ================= TAB BAR ================= -->
+<nav class="tabbar" id="tabbar">
+  <button class="tab-btn active" data-tab="overview">סקירה כללית</button>
+  <button class="tab-btn" data-tab="map">מפה ויישובים</button>
+  <button class="tab-btn" data-tab="care">מגמות ונזקקויות</button>
+  <button class="tab-btn" data-tab="seniors">אזרחים ותיקים</button>
+  <button class="tab-btn" data-tab="budget">תקציב</button>
+  <button class="tab-btn" data-tab="place">השמות ומסגרות</button>
+</nav>
+
+<div class="tab-panel active" id="panel-overview">
+
+<!-- ================= INSIGHTS ================= -->
+<section id="insights">
+  <div class="sec-head"><span class="sec-no">01</span><h2>נקודות מרכזיות מהנתונים</h2></div>
+  <p class="sec-desc">עובדות בולטות כפי שהן עולות מהקבצים — ללא פרשנות. כל כרטיס מציין את קובץ המקור.</p>
+  <div class="insight-grid" id="insightGrid"></div>
+</section>
+
+<!-- ================= NATIONAL COMPARISON + AGES ================= -->
+<section>
+  <div class="sec-head"><span class="sec-no">02</span><h2>המועצה בהשוואה ארצית</h2></div>
+  <div class="grid-2">
+    <div class="card">
+      <span class="src">מקור: C108</span>
+      <h3>שיעור מקבלי שירות ברווחה</h3>
+      <div class="sub">אחוז מתוך כלל הקבוצה — המועצה מול ממוצע ארצי ורשויות דומות</div>
+      <div class="chart-box" style="height:300px"><canvas id="c108Chart"></canvas></div>
+    </div>
+    <div class="card">
+      <span class="src">מקור: C107</span>
+      <h3>מבנה גילים — המועצה מול רשויות דומות</h3>
+      <div class="sub">אוכלוסייה לפי קבוצת גיל; ברוב קבוצות הגיל המבוגרות המועצה קטנה מהממוצע ברשויות דומות</div>
+      <div class="chart-box" style="height:300px"><canvas id="agesChart"></canvas></div>
+    </div>
+  </div>
+</section>
+
+</div><!-- /panel-overview -->
+
+<div class="tab-panel" id="panel-map">
+
+<!-- ================= MAP ================= -->
+<section id="mapSec">
+  <div class="sec-head"><span class="sec-no">03</span><h2>מפת היישובים</h2></div>
+  <p class="sec-desc">גבולות היישובים על גבי מפת דרכים (שמות כבישים וצירים מוצגים במפה). בחרו מדד לצביעת היישובים, ולחצו על יישוב לפרטים מלאים.</p>
+  <div class="card map-card">
+    <div class="map-layout">
+      <div id="map"></div>
+      <div class="map-side">
+        <div class="map-controls">
+          <label for="metricSel">מדד צביעה</label>
+          <select id="metricSel"></select>
+          <div class="legend" id="legend"></div>
+          <div class="legend-labels"><span id="legMin"></span><span id="legMax"></span></div>
+        </div>
+        <div class="town-list" id="townList"></div>
+        <div class="map-note">הערה: <b>קדר</b> מופיע בקבצי הנתונים אך ללא שכבת גבול במפה. ל<b>איבי הנחל</b> יש שכבת גבול אך אין שורת נתונים נפרדת בקבצים. <b>אספר</b> הוא שמו הרשמי של היישוב מיצד בנתונים.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= TOWNS TABLE ================= -->
+<section id="townsSec">
+  <div class="sec-head"><span class="sec-no">04</span><h2>השוואת יישובים</h2></div>
+  <p class="sec-desc">לחיצה על כותרת עמודה ממיינת את הטבלה. עמודות אחוז ו"ל־1,000" מחושבות מתוך נתוני המקור (T20, T64).</p>
+  <div class="card" style="padding:0">
+    <span class="src" style="top:-12px">מקור: T20 · T64</span>
+    <div class="tbl-wrap"><table class="data" id="townTable"></table></div>
+  </div>
+</section>
+
+</div><!-- /panel-map -->
+
+<div class="tab-panel" id="panel-care">
+
+<!-- ================= TRENDS ================= -->
+<section>
+  <div class="sec-head"><span class="sec-no">05</span><h2>מגמות טיפול — פתיחת וסגירת תיקים</h2></div>
+  <div class="grid-23">
+    <div class="card">
+      <span class="src">מקור: C120 · C121 · C122</span>
+      <h3>פתיחות תיקים (24 חודשים) מול סגירות (12 חודשים)</h3>
+      <div class="sub">פתיחות: 06/2024–05/2026 · סגירות: 06/2025–05/2026. בולטות הסגירות המרוכזות בנוב׳–דצמ׳ 2025 (64 ו־51 תיקים)</div>
+      <div class="chart-box" style="height:320px"><canvas id="trendChart"></canvas></div>
+    </div>
+    <div class="card">
+      <span class="src">מקור: C115 · C118</span>
+      <h3>מי מקבלי השירות?</h3>
+      <div class="sub">התפלגות גיל ומגדר של מקבלי השירות הפעילים</div>
+      <div class="chart-box" style="height:150px"><canvas id="recAgeChart"></canvas></div>
+      <div class="chart-box" style="height:120px;margin-top:14px"><canvas id="recGenderChart"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= NEEDS ================= -->
+<section>
+  <div class="sec-head"><span class="sec-no">06</span><h2>נזקקויות מובילות במשפחות</h2></div>
+  <div class="grid-23">
+    <div class="card">
+      <span class="src">מקור: C109</span>
+      <h3 id="needsTitle">הנזקקויות השכיחות ביותר</h3>
+      <div class="sub">מספר משפחות מקבלות שירות לכל נזקקות, מתוך <b id="needsTotal"></b> משפחות פעילות (משפחה יכולה להופיע ביותר מנזקקות אחת)</div>
+      <div class="chart-box" style="height:420px"><canvas id="needsChart"></canvas></div>
+    </div>
+    <div class="card">
+      <span class="src">מקור: C119</span>
+      <h3>יעדי התערבות מובילים</h3>
+      <div class="sub">מספר מקבלי שירות לכל יעד טיפולי</div>
+      <div id="goalsList"></div>
+    </div>
+  </div>
+</section>
+
+</div><!-- /panel-care -->
+
+<div class="tab-panel" id="panel-seniors">
+
+<!-- ================= SENIORS ================= -->
+<section>
+  <div class="sec-head"><span class="sec-no">07</span><h2>אזרחים ותיקים</h2></div>
+  <p class="sec-desc">האוכלוסייה הוותיקה צפויה לגדול בהתמדה — תחום שדורש היערכות בשירותים, במסגרות ובתקציב.</p>
+  <div class="grid-3">
+    <div class="card">
+      <span class="src">מקור: C134</span>
+      <h3>תחזית אוכלוסיית ותיקים</h3>
+      <div class="sub">2026–2035</div>
+      <div class="chart-box" style="height:230px"><canvas id="forecastChart"></canvas></div>
+    </div>
+    <div class="card">
+      <span class="src">מקור: C135</span>
+      <h3>ותיקים לפי מגדר וגיל</h3>
+      <div class="sub">קבוצת 62–66 כוללת נשים בלבד (גיל זכאות)</div>
+      <div class="chart-box" style="height:230px"><canvas id="pyramidChart"></canvas></div>
+    </div>
+    <div class="card">
+      <span class="src">מקור: C142 · C144</span>
+      <h3>רמת תפקוד ובדידות</h3>
+      <div class="sub">ותיקים הרשומים ברווחה, לפי רמת תפקוד</div>
+      <div class="chart-box" style="height:130px"><canvas id="functionChart"></canvas></div>
+      <div class="stat-trio">
+        <div class="st"><div class="v num" id="ariri1"></div><div class="l">ערירים לפי הרשות לנצל"ש</div></div>
+        <div class="st"><div class="v num" id="ariri2"></div><div class="l">חשש לבדידות — ללא ילדים</div></div>
+        <div class="st"><div class="v num" id="ariri3"></div><div class="l">חשש לבדידות — ילדים ביישוב אחר</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="grid-2" style="margin-top:16px">
+    <div class="card">
+      <span class="src">מקור: T83</span>
+      <h3>קהילה תומכת קשישים — תפוסה</h3>
+      <div class="sub" id="suppSub"></div>
+      <div class="occ-bar"><div class="occ-fill" id="occFill"></div></div>
+      <div class="occ-scale"><span>0</span><span id="occCap"></span></div>
+      <div style="margin-top:14px">
+        <h3 style="font-size:15px">מועדוני ותיקים פעילים</h3>
+        <div class="tbl-wrap"><table class="data" id="clubsTable" style="font-size:12.5px"></table></div>
+        <div class="muted" style="margin-top:4px">מקור: T89</div>
+      </div>
+    </div>
+    <div class="card">
+      <span class="src">מקור: T65</span>
+      <h3>מקבלי גמלת סיעוד לפי רמה — המועצה מול ממוצע ארצי</h3>
+      <div class="sub">אחוז מקבלי סיעוד בכל רמה; שיעורי הסיעוד במועצה נמוכים מהממוצע הארצי בכל הרמות</div>
+      <div class="chart-box" style="height:300px"><canvas id="nursingChart"></canvas></div>
+    </div>
+  </div>
+</section>
+
+</div><!-- /panel-seniors -->
+
+<div class="tab-panel" id="panel-budget">
+
+<!-- ================= BUDGET ================= -->
+<section>
+  <div class="sec-head"><span class="sec-no">08</span><h2>תקציב הרווחה</h2></div>
+  <div class="grid-23">
+    <div class="card">
+      <span class="src">מקור: T33</span>
+      <h3>הקצאה לפי תחום</h3>
+      <div class="sub">ברוטו מול נטו · סה"כ ברוטו: <b id="budTotal"></b> ₪ · נטו: <b id="budTotalNet"></b> ₪</div>
+      <div class="chart-box" style="height:360px"><canvas id="budgetChart"></canvas></div>
+    </div>
+    <div class="card">
+      <span class="src">מקור: C153</span>
+      <h3>תוכניות ותיקים — תכנון מול ביצוע</h3>
+      <div class="sub">תקציבי "הזדקנות מיטבית" ו"שירותים לניצולי שואה" (₪, שנה נוכחית מול אשתקד)</div>
+      <div class="tbl-wrap" style="max-height:430px;overflow-y:auto"><table class="data" id="seniorBudgetTable" style="font-size:12.5px"></table></div>
+    </div>
+  </div>
+</section>
+
+</div><!-- /panel-budget -->
+
+<div class="tab-panel" id="panel-place">
+
+<!-- ================= PLACEMENTS ================= -->
+<section>
+  <div class="sec-head"><span class="sec-no">09</span><h2>השמות במסגרות — בתוך המועצה ומחוצה לה</h2></div>
+  <p class="sec-desc">היכן תושבי המועצה מקבלים שירות במסגרות (מעונות, מועדונים, הוסטלים, מרכזי טיפול ועוד) — נקודה מרכזית לתכנון פיתוח שירותים מקומיים.</p>
+  <div class="grid-3">
+    <div class="card">
+      <span class="src">מקור: T26</span>
+      <h3>מושמים לפי מינהל</h3>
+      <div class="sub">בתוך המועצה מול רשויות אחרות — בולט מינהל המוגבלויות שבו רוב ההשמות מחוץ למועצה</div>
+      <div class="chart-box" style="height:260px"><canvas id="adminChart"></canvas></div>
+    </div>
+    <div class="card">
+      <span class="src">מקור: T27</span>
+      <h3>היכן מושמים תושבי המועצה?</h3>
+      <div class="sub">לפי הרשות שבה פועלת המסגרת</div>
+      <div class="chart-box" style="height:260px"><canvas id="authChart"></canvas></div>
+    </div>
+    <div class="card">
+      <span class="src">מקור: C132 · C133</span>
+      <h3>מקבלי גמלאות ביטוח לאומי</h3>
+      <div class="sub" id="niSub"></div>
+      <div class="chart-box" style="height:260px"><canvas id="niChart"></canvas></div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:16px;padding-bottom:8px">
+    <span class="src">מקור: T30</span>
+    <h3>המסגרות הפועלות עבור המועצה</h3>
+    <div class="sub">מסגרות לפי סך מושמים; "מרשויות אחרות" = משתמשים נכנסים ממועצות שכנות למסגרות הפועלות בגוש עציון</div>
+    <div class="tbl-wrap" style="max-height:380px;overflow-y:auto"><table class="data" id="fwTable" style="font-size:12.5px"></table></div>
+  </div>
+</section>
+
+</div><!-- /panel-place -->
+
+<!-- ================= FOOTER ================= -->
+<footer>
+  <h4>מקורות הנתונים</h4>
+  <ul>
+    <li><code>T20</code> תמונת יישוב — אוכלוסייה, מקבלי שירות, אשכול חברתי־כלכלי</li>
+    <li><code>T64</code> מקבלי גמלאות ביטוח לאומי לפי יישוב וסוג גמלה</li>
+    <li><code>C107–C119</code> דמוגרפיה, נזקקויות ויעדי התערבות</li>
+    <li><code>C120–C122</code> פתיחות וסגירות תיקים חודשיות</li>
+    <li><code>T33</code> הקצאת תקציב רווחה לפי תחום</li>
+    <li><code>C132–C153</code> אזרחים ותיקים: גמלאות, תחזית, תפקוד, תקציב תוכניות</li>
+    <li><code>T26 · T27 · T30</code> השמות ומסגרות</li>
+    <li><code>T65 · T83 · T89</code> סיעוד, קהילה תומכת, מועדונים</li>
+    <li><code>gush_geojson/</code> שכבות גבולות היישובים</li>
+  </ul>
+  <div class="method">
+    <b>שיטה:</b> כל המספרים לקוחים ישירות מקובצי היצוא מתאריך 11.06.2026. ערכים מחושבים — אחוזים, סכומים ויחסים "ל־1,000" — נגזרים אך ורק ממספרי המקור ומסומנים בגוף הדוח. סכום מקבלי השירות בפילוח היישובים (T20: 4,507) שונה במעט מהנתון המועצתי (C108: 4,479), וסכום הגמלאות בפילוח היישובים (T64: 2,966) שונה במעט מהנתון המועצתי (C133: 2,973) — בכל מקרה כזה שני הנתונים מוצגים כפי שהם במקור. מפת הרקע: Google Maps (שכבת דרכים/לוויין).
+  </div>
+</footer>
+
+</div><!-- /wrap -->
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
+<script src="data.js"></script>
+<script>
+const D = window.DASH;
+const fmt = n => n==null ? '—' : Math.round(n).toLocaleString('he-IL');
+const fmt1 = n => n==null ? '—' : (Math.round(n*10)/10).toLocaleString('he-IL',{minimumFractionDigits:1,maximumFractionDigits:1});
+const pct1 = n => n==null ? '—' : fmt1(n)+'%';
+const money = n => n==null ? '—' : Math.round(n).toLocaleString('he-IL');
+
+/* ---------- palette ---------- */
+const C = {green:'#2f5d3a', greenLight:'#7ba66a', terra:'#b9552b', terraLight:'#dd9c6f',
+           gold:'#a98a3f', ink:'#22301f', inkSoft:'#5c6653', sand:'#e6dec8', deep:'#24472d'};
+
+Chart.defaults.font.family = "'Heebo',sans-serif";
+Chart.defaults.font.size = 12;
+Chart.defaults.color = C.inkSoft;
+Chart.defaults.borderColor = '#e9e2d0';
+const RTL = {rtl:true, textDirection:'rtl'};
+/* charts created inside hidden tabs render at size 0 — keep a registry so tab switches can resize them */
+const allCharts = [];
+function mkChart(el, cfg){ const c = new Chart(el, cfg); allCharts.push(c); return c; }
+const tt = {rtl:true, textDirection:'rtl', backgroundColor:'#22301f', titleFont:{family:'Heebo',weight:'700'}, bodyFont:{family:'Heebo'}, padding:10, cornerRadius:8, displayColors:false};
+
+/* ============ KPIs ============ */
+const c108 = Object.fromEntries(D.c108.map(r=>[r.group,r]));
+const recip = c108['מקבלי שירות'];
+const sf = D.senior_forecast;
+const growth = (sf[sf.length-1].n - sf[0].n) / sf[0].n * 100;
+const kpis = [
+  {label:'תושבים (למ"ס)', value:fmt(recip.total), ctx:'סכום 14 היישובים בפילוח זהה: '+fmt(D.towns.reduce((s,t)=>s+t.pop,0)), cls:''},
+  {label:'מקבלי שירות ברווחה', value:fmt(recip.recipients), ctx:'<b class="warn">'+pct1(recip.pct)+'</b> מהאוכלוסייה · ארצי '+pct1(recip.national*100)+' · רשויות דומות '+pct1(recip.similar*100), cls:'alt'},
+  {label:'משפחות פעילות ברווחה', value:fmt(D.family_needs_total), ctx:'תיקי משפחה פעילים (C109)', cls:''},
+  {label:'מקבלי גמלאות ב"ל', value:fmt(D.ni_total.people), ctx:fmt(D.ni_total.benefits)+' גמלאות בסה"כ · '+D.ni_total.month, cls:'gold'},
+  {label:'תקציב רווחה (ברוטו)', value:'₪'+(D.budget_total_gross/1e6).toLocaleString('he-IL',{maximumFractionDigits:1})+' מ׳', ctx:'נטו: ₪'+(D.budget_total_net/1e6).toLocaleString('he-IL',{maximumFractionDigits:1})+' מ׳ (T33)', cls:''},
+  {label:'אזרחים ותיקים — תחזית', value:fmt(sf[0].n), ctx:'צפי ל־2035: <b>'+fmt(sf[sf.length-1].n)+'</b> (גידול מחושב של '+fmt1(growth)+'%)', cls:'gold'},
+];
+document.getElementById('kpiGrid').innerHTML = kpis.map(k=>
+  `<div class="kpi ${k.cls}"><div class="label">${k.label}</div><div class="value num">${k.value}</div><div class="ctx">${k.ctx}</div></div>`).join('');
+
+/* ============ Insights ============ */
+const adminDis = D.placements_by_admin.find(a=>a.admin.includes('מוגבלויות'));
+const topNeed = D.family_needs[0];
+const insights = [
+  {big:pct1(recip.pct), text:'מהתושבים מקבלים שירות ברווחה — מעל הממוצע הארצי ('+pct1(recip.national*100)+') ומעל רשויות דומות ('+pct1(recip.similar*100)+').', src:'C108', warn:true},
+  {big:'+'+fmt(sf[sf.length-1].n - sf[0].n), text:'אזרחים ותיקים יתווספו עד 2035 לפי התחזית — מ־'+fmt(sf[0].n)+' ל־'+fmt(sf[sf.length-1].n)+' ('+fmt1(growth)+'%+, מחושב).', src:'C134', warn:false},
+  {big:pct1(D.supportive.occupancy*100), text:'תפוסה בלבד בקהילה התומכת לקשישים: '+fmt(D.supportive.beneficiaries)+' נהנים מתוך תפוסה מקסימלית של '+fmt(D.supportive.capacity)+'.', src:'T83', warn:true},
+  {big:fmt(adminDis.outside)+' מ־'+fmt(adminDis.inside+adminDis.outside), text:'מההשמות במינהל המוגבלויות הן מחוץ למועצה ('+pct1(adminDis.outside/(adminDis.inside+adminDis.outside)*100)+', מחושב) — הנתח הגדול ביותר מבין המינהלים.', src:'T26', warn:true},
+];
+document.getElementById('insightGrid').innerHTML = insights.map(i=>
+  `<div class="insight ${i.warn?'warn':''}"><div class="big num">${i.big}</div><p>${i.text}</p><span class="isrc">מקור: ${i.src}</span></div>`).join('');
+
+/* ============ MAP ============ */
+const towns = D.towns;
+const byName = Object.fromEntries(towns.map(t=>[t.name,t]));
+const metrics = {
+  recPct:{label:'מקבלי שירות — אחוז מהאוכלוסייה (מחושב)', val:t=>t.recipients/t.pop*100, fmt:pct1},
+  kids:{label:'ילדים בסיכון ל־1,000 ילדים 0–19 (מחושב)', val:t=>t.kids_risk/t.pop_0_19*1000, fmt:n=>fmt(n)},
+  socio:{label:'אשכול חברתי־כלכלי', val:t=>t.socio, fmt:n=>String(n)},
+  pop:{label:'מספר תושבים (למ"ס)', val:t=>t.pop, fmt:fmt},
+  ben:{label:'מקבלי גמלאות ביטוח לאומי', val:t=>t.benefits.total, fmt:fmt},
+};
+const sel = document.getElementById('metricSel');
+sel.innerHTML = Object.entries(metrics).map(([k,m])=>`<option value="${k}">${m.label}</option>`).join('');
+
+const map = L.map('map',{scrollWheelZoom:true, zoomControl:true});
+const roadLayer = L.tileLayer('https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=he',{
+  subdomains:'0123', maxZoom:20, attribution:'מפה: © Google'});
+const satLayer = L.tileLayer('https://mt{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}&hl=he',{
+  subdomains:'0123', maxZoom:20, attribution:'מפה: © Google'});
+roadLayer.addTo(map);
+L.control.layers({'מפת דרכים':roadLayer,'לוויין + דרכים':satLayer},null,{position:'topright'}).addTo(map);
+
+const ramp = ['#ece4cf','#cdd9b5','#a3c08c','#6f9e62','#3f7347','#24472d'];
+function colorFor(v,min,max){
+  if(v==null) return '#d8d4c8';
+  const t=(max===min)?0.5:(v-min)/(max-min);
+  return ramp[Math.min(ramp.length-1, Math.floor(t*ramp.length))];
+}
+function popupHTML(t){
+  if(!t) return `<div class="pop-title">איבי הנחל</div><div class="pop-sub">אין שורת נתונים נפרדת בקבצים</div>`;
+  const rp = t.recipients/t.pop*100;
+  const rows = [
+    ['תושבים (למ"ס)', fmt(t.pop)],
+    ['אשכול חברתי־כלכלי', t.socio],
+    ['מקבלי שירות ברווחה', fmt(t.recipients)+' <span class="muted">('+pct1(rp)+' מחושב)</span>'],
+    ['משפחות מקבלות שירות', fmt(t.families)],
+    ['ילדים בסיכון מקבלי שירות', fmt(t.kids_risk)],
+    ['אנשים עם מוגבלות', fmt(t.disabled)],
+    ['עולים חדשים מקבלי שירות', fmt(t.olim)],
+    ['מקבלי גמלאות ב"ל', fmt(t.benefits.total)],
+  ];
+  return `<div class="pop-title">${t.name}</div><div class="pop-sub">מקור: T20 · T64</div>
+  <table class="pop-table">${rows.map((r,i)=>`<tr class="${i==2?'hl':''}"><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('')}</table>`;
+}
+let geoLayer;
+const layerByName = {};
+function paint(){
+  const m = metrics[sel.value];
+  const vals = towns.map(m.val).filter(v=>v!=null && isFinite(v));
+  const min=Math.min(...vals), max=Math.max(...vals);
+  if(geoLayer) geoLayer.remove();
+  geoLayer = L.geoJSON(D.geojson,{
+    style:f=>{
+      const t=byName[f.properties.name];
+      const v=t?m.val(t):null;
+      return {color:'#24472d', weight:2, fillColor:colorFor(v,min,max), fillOpacity:t?0.55:0.25, dashArray:t?null:'5 5'};
+    },
+    onEachFeature:(f,l)=>{
+      const t=byName[f.properties.name];
+      l.bindPopup(popupHTML(t),{maxWidth:300});
+      l.bindTooltip(f.properties.name,{permanent:true,direction:'center',className:'town-label'});
+      layerByName[f.properties.name]=l;
+    }
+  }).addTo(map);
+  // legend
+  document.getElementById('legend').innerHTML = ramp.map(c=>`<div style="background:${c}"></div>`).join('');
+  document.getElementById('legMin').textContent = m.fmt(min);
+  document.getElementById('legMax').textContent = m.fmt(max);
+  // side list
+  const sorted=[...towns].sort((a,b)=>m.val(b)-m.val(a));
+  const mx=Math.max(...sorted.map(m.val));
+  document.getElementById('townList').innerHTML = sorted.map(t=>{
+    const v=m.val(t);
+    return `<div class="town-row" data-name="${t.name}">
+      <span class="t-name">${t.name}</span>
+      <span class="t-bar" style="width:${Math.max(4,v/mx*70)}px"></span>
+      <span class="t-val">${m.fmt(v)}</span></div>`;
+  }).join('');
+  document.querySelectorAll('.town-row').forEach(r=>r.addEventListener('click',()=>{
+    const l=layerByName[r.dataset.name];
+    if(l){map.fitBounds(l.getBounds(),{maxZoom:15});l.openPopup();}
+  }));
+}
+sel.addEventListener('change',paint);
+// the map panel starts hidden, so fitBounds would compute a bogus zoom — placeholder view now, real fit on first tab reveal
+const gBounds = L.geoJSON(D.geojson).getBounds();
+map.setView(gBounds.getCenter(), 11);
+let mapFitted = false;
+paint();
+// town label style; permanent labels overlap in the dense central cluster at low zoom, so show them from zoom 12
+const st=document.createElement('style');
+st.textContent=`.town-label{background:transparent;border:none;box-shadow:none;font-family:'Heebo';font-weight:800;font-size:11.5px;color:#1d3322;text-shadow:0 0 4px #fff,0 0 4px #fff,0 0 4px #fff;transition:opacity .2s}
+.labels-off .town-label{opacity:0!important}
+.labels-sm .town-label{font-size:9.5px}`;
+document.head.appendChild(st);
+function toggleLabels(){
+  const z = map.getZoom(), el = document.getElementById('map');
+  el.classList.toggle('labels-off', z < 11);
+  el.classList.toggle('labels-sm', z === 11);
+}
+map.on('zoomend', toggleLabels);
+toggleLabels();
+
+/* ============ Towns table ============ */
+const cols = [
+  {k:'name', label:'יישוב', txt:true},
+  {k:'socio', label:'אשכול'},
+  {k:'pop', label:'תושבים'},
+  {k:'recipients', label:'מקבלי שירות'},
+  {k:'recPct', label:'% מהאוכלוסייה*', calc:t=>t.recipients/t.pop*100, f:pct1, bar:true},
+  {k:'families', label:'משפחות'},
+  {k:'kids_risk', label:'ילדים בסיכון'},
+  {k:'kids1000', label:'ל־1,000 ילדים*', calc:t=>t.kids_risk/t.pop_0_19*1000, f:fmt},
+  {k:'disabled', label:'עם מוגבלות'},
+  {k:'olim', label:'עולים'},
+  {k:'benTotal', label:'גמלאות ב"ל', calc:t=>t.benefits.total},
+];
+let sortKey='recPct', sortDir=-1;
+function cellVal(t,c){ return c.calc ? c.calc(t) : t[c.k]; }
+function renderTable(){
+  const rows=[...towns].sort((a,b)=>{
+    const c=cols.find(c=>c.k===sortKey);
+    const va=cellVal(a,c), vb=cellVal(b,c);
+    return (c.txt? String(va).localeCompare(String(vb),'he') : va-vb)*sortDir;
+  });
+  const maxPct=Math.max(...towns.map(t=>t.recipients/t.pop*100));
+  let html='<thead><tr>'+cols.map(c=>
+    `<th data-k="${c.k}" class="${c.k===sortKey?'sorted':''}">${c.label} <span class="arrow">${c.k===sortKey?(sortDir<0?'▼':'▲'):''}</span></th>`).join('')+'</tr></thead><tbody>';
+  for(const t of rows){
+    html+='<tr>'+cols.map(c=>{
+      const v=cellVal(t,c);
+      if(c.txt) return `<td class="name">${v}${t.name==='קדר'?' <span class="muted">ללא שכבת מפה</span>':''}</td>`;
+      let s=(c.f||fmt)(v);
+      if(c.bar) s+=`<span class="cell-bar" style="width:${Math.max(3,v/maxPct*46)}px"></span>`;
+      return `<td>${s}</td>`;
+    }).join('')+'</tr>';
+  }
+  // totals
+  const sum=k=>towns.reduce((s,t)=>s+(t[k]||0),0);
+  const totBen=towns.reduce((s,t)=>s+t.benefits.total,0);
+  html+=`<tr class="total-row"><td>סה"כ (סכום מחושב)</td><td>—</td><td>${fmt(sum('pop'))}</td><td>${fmt(sum('recipients'))}</td>
+    <td>${pct1(sum('recipients')/sum('pop')*100)}</td><td>${fmt(sum('families'))}</td><td>${fmt(sum('kids_risk'))}</td>
+    <td>${fmt(sum('kids_risk')/sum('pop_0_19')*1000)}</td><td>${fmt(sum('disabled'))}</td><td>${fmt(sum('olim'))}</td><td>${fmt(totBen)}</td></tr>`;
+  html+='</tbody>';
+  const tbl=document.getElementById('townTable');
+  tbl.innerHTML=html;
+  tbl.querySelectorAll('th').forEach(th=>th.addEventListener('click',()=>{
+    const k=th.dataset.k;
+    if(sortKey===k) sortDir*=-1; else {sortKey=k; sortDir=-1;}
+    renderTable();
+  }));
+}
+renderTable();
+
+/* ============ C108 chart ============ */
+mkChart(document.getElementById('c108Chart'),{
+  type:'bar',
+  data:{labels:D.c108.map(r=>r.group),
+    datasets:[
+      {label:'המועצה', data:D.c108.map(r=>r.pct), backgroundColor:C.green, borderRadius:4},
+      {label:'ממוצע ארצי', data:D.c108.map(r=>r.national*100), backgroundColor:C.terraLight, borderRadius:4},
+      {label:'רשויות דומות', data:D.c108.map(r=>r.similar*100), backgroundColor:C.sand, borderRadius:4},
+    ]},
+  options:{...RTL, maintainAspectRatio:false,
+    plugins:{legend:{position:'bottom',labels:{boxWidth:12,boxHeight:12}}, tooltip:{...tt, callbacks:{label:c=>c.dataset.label+': '+pct1(c.parsed.y)}}},
+    scales:{y:{ticks:{callback:v=>v+'%'}}, x:{grid:{display:false}}}}
+});
+
+/* ============ Ages chart ============ */
+mkChart(document.getElementById('agesChart'),{
+  type:'bar',
+  data:{labels:D.ages.map(a=>a.g),
+    datasets:[
+      {label:'המועצה', data:D.ages.map(a=>a.pop), backgroundColor:C.green, borderRadius:3},
+      {label:'ממוצע רשויות דומות', data:D.ages.map(a=>a.similar), type:'line', borderColor:C.terra, backgroundColor:C.terra, borderWidth:2, pointRadius:2.5, tension:.3},
+    ]},
+  options:{...RTL, maintainAspectRatio:false,
+    plugins:{legend:{position:'bottom',labels:{boxWidth:12,boxHeight:12}}, tooltip:{...tt, callbacks:{label:c=>c.dataset.label+': '+fmt(c.parsed.y)}}},
+    scales:{x:{grid:{display:false},ticks:{font:{size:10.5}}}}}
+});
+
+/* ============ Trend chart ============ */
+const closeByYm = Object.fromEntries(D.closings.map(c=>[c.ym,c.n]));
+mkChart(document.getElementById('trendChart'),{
+  data:{labels:D.openings.map(o=>o.date),
+    datasets:[
+      {type:'line', label:'פתיחות תיקים', data:D.openings.map(o=>o.total), borderColor:C.green, backgroundColor:C.green, borderWidth:2.5, pointRadius:3, tension:.3},
+      {type:'bar', label:'סגירות תיקים', data:D.openings.map(o=>closeByYm[o.ym]??null), backgroundColor:C.terraLight, borderRadius:3},
+    ]},
+  options:{...RTL, maintainAspectRatio:false,
+    plugins:{legend:{position:'bottom',labels:{boxWidth:12,boxHeight:12}}, tooltip:{...tt}},
+    scales:{x:{grid:{display:false},ticks:{font:{size:10},maxRotation:60,minRotation:60}}}}
+});
+
+/* ============ Recipient demographics ============ */
+mkChart(document.getElementById('recAgeChart'),{
+  type:'bar',
+  data:{labels:D.rec_age.map(r=>r.g), datasets:[{label:'מקבלי שירות', data:D.rec_age.map(r=>r.n), backgroundColor:[C.green,C.greenLight,C.gold,C.terraLight], borderRadius:4}]},
+  options:{...RTL, indexAxis:'y', maintainAspectRatio:false,
+    plugins:{legend:{display:false}, tooltip:{...tt}, title:{display:true,text:'לפי גיל',align:'start',color:C.inkSoft}},
+    scales:{y:{grid:{display:false}}}}
+});
+mkChart(document.getElementById('recGenderChart'),{
+  type:'bar',
+  data:{labels:D.rec_gender.map(r=>r.g), datasets:[{label:'מקבלי שירות', data:D.rec_gender.map(r=>r.n), backgroundColor:[C.terra,C.green,C.sand], borderRadius:4}]},
+  options:{...RTL, indexAxis:'y', maintainAspectRatio:false,
+    plugins:{legend:{display:false}, tooltip:{...tt}, title:{display:true,text:'לפי מגדר',align:'start',color:C.inkSoft}},
+    scales:{y:{grid:{display:false}}}}
+});
+
+/* ============ Needs chart ============ */
+const clusterColors = {};
+const cPal = [C.green, C.terra, C.gold, '#5b7d9e', C.greenLight, '#8a5a44', C.deep];
+const topNeeds = D.family_needs.slice(0,12);
+topNeeds.forEach(n=>{ if(!(n.cluster in clusterColors)) clusterColors[n.cluster]=cPal[Object.keys(clusterColors).length%cPal.length]; });
+document.getElementById('needsTotal').textContent = fmt(D.family_needs_total);
+mkChart(document.getElementById('needsChart'),{
+  type:'bar',
+  data:{labels:topNeeds.map(n=>n.need.length>42?n.need.slice(0,40)+'…':n.need),
+    datasets:[{data:topNeeds.map(n=>n.n), backgroundColor:topNeeds.map(n=>clusterColors[n.cluster]), borderRadius:4}]},
+  options:{...RTL, indexAxis:'y', maintainAspectRatio:false,
+    plugins:{legend:{display:false}, tooltip:{...tt, callbacks:{
+      title:i=>topNeeds[i[0].dataIndex].need,
+      label:c=>fmt(c.parsed.x)+' משפחות · אשכול: '+topNeeds[c.dataIndex].cluster}}},
+    scales:{y:{ticks:{font:{size:11.5}},grid:{display:false}}}}
+});
+
+/* ============ Goals list ============ */
+const topGoals = D.goals.slice(0,8);
+const gMax = topGoals[0].n;
+document.getElementById('goalsList').innerHTML = topGoals.map(g=>
+  `<div style="margin-bottom:11px">
+    <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px">
+      <span style="font-weight:600;max-width:80%">${g.goal}</span><b class="num">${fmt(g.n)}</b></div>
+    <div style="height:7px;background:var(--paper-deep);border-radius:4px;overflow:hidden">
+      <div style="height:100%;width:${g.n/gMax*100}%;background:var(--green);border-radius:4px"></div></div>
+  </div>`).join('');
+
+/* ============ Seniors ============ */
+mkChart(document.getElementById('forecastChart'),{
+  type:'line',
+  data:{labels:sf.map(r=>r.y), datasets:[{label:'תחזית', data:sf.map(r=>r.n), borderColor:C.gold, backgroundColor:'rgba(169,138,63,.16)', fill:true, borderWidth:2.5, pointRadius:3, tension:.3}]},
+  options:{...RTL, maintainAspectRatio:false,
+    plugins:{legend:{display:false}, tooltip:{...tt, callbacks:{label:c=>fmt(c.parsed.y)+' ותיקים'}}},
+    scales:{x:{grid:{display:false}}}}
+});
+const pyrGroups = ['62 - 66','67 - 75','76 - 85','86+'];
+const pyrOf = (g,gen)=>{const r=D.senior_pyramid.find(r=>r.g===g&&r.gender===gen);return r?r.n:0;};
+mkChart(document.getElementById('pyramidChart'),{
+  type:'bar',
+  data:{labels:pyrGroups,
+    datasets:[
+      {label:'גברים', data:pyrGroups.map(g=>-pyrOf(g,'זכר')), backgroundColor:C.green, borderRadius:3},
+      {label:'נשים', data:pyrGroups.map(g=>pyrOf(g,'נקבה')), backgroundColor:C.terra, borderRadius:3},
+    ]},
+  options:{...RTL, indexAxis:'y', maintainAspectRatio:false,
+    plugins:{legend:{position:'bottom',labels:{boxWidth:12,boxHeight:12}},
+      tooltip:{...tt, callbacks:{label:c=>c.dataset.label+': '+fmt(Math.abs(c.parsed.x))}}},
+    scales:{x:{stacked:true, ticks:{callback:v=>fmt(Math.abs(v))}}, y:{stacked:true, grid:{display:false}}}}
+});
+mkChart(document.getElementById('functionChart'),{
+  type:'bar',
+  data:{labels:['רשומים ברווחה'],
+    datasets:D.senior_function.map((f,i)=>({label:f.level, data:[f.n], backgroundColor:[C.green,C.greenLight,C.gold,C.terra][i%4], borderRadius:3, barPercentage:.7}))},
+  options:{...RTL, indexAxis:'y', maintainAspectRatio:false,
+    plugins:{legend:{position:'bottom',labels:{boxWidth:11,boxHeight:11,font:{size:11}}}, tooltip:{...tt}},
+    scales:{x:{stacked:true}, y:{stacked:true, display:false}}}
+});
+document.getElementById('ariri1').textContent = fmt(D.ariri.authority);
+document.getElementById('ariri2').textContent = fmt(D.ariri.no_children);
+document.getElementById('ariri3').textContent = fmt(D.ariri.children_elsewhere);
+
+/* supportive community occupancy */
+const occ = D.supportive.occupancy*100;
+document.getElementById('suppSub').innerHTML =
+  `"${D.supportive.name}": <b>${fmt(D.supportive.beneficiaries)}</b> נהנים · <b>${fmt(D.supportive.households)}</b> בתי אב · מתוכם <b>${fmt(D.supportive.survivors)}</b> ניצולי שואה`;
+document.getElementById('occFill').style.width = occ+'%';
+document.getElementById('occFill').textContent = pct1(occ)+' תפוסה';
+document.getElementById('occCap').textContent = 'תפוסה מקסימלית: '+fmt(D.supportive.capacity);
+
+/* clubs table */
+document.getElementById('clubsTable').innerHTML =
+  '<thead><tr><th>מסגרת</th><th>מושמים</th><th>גיל ממוצע</th><th>% עריריים</th></tr></thead><tbody>'+
+  D.clubs.map(c=>`<tr><td class="name">${c.name}</td><td>${fmt(c.n)}</td><td>${fmt1(c.avg_age)}</td><td>${pct1(c.pct_ariri*100)}</td></tr>`).join('')+'</tbody>';
+
+/* nursing chart */
+mkChart(document.getElementById('nursingChart'),{
+  type:'bar',
+  data:{labels:D.nursing.levels,
+    datasets:[
+      {label:'המועצה', data:D.nursing.pct_authority, backgroundColor:C.green, borderRadius:4},
+      {label:'ממוצע ארצי', data:D.nursing.pct_national, backgroundColor:C.sand, borderRadius:4},
+    ]},
+  options:{...RTL, maintainAspectRatio:false,
+    plugins:{legend:{position:'bottom',labels:{boxWidth:12,boxHeight:12}},
+      tooltip:{...tt, callbacks:{label:c=>c.dataset.label+': '+pct1(c.parsed.y)+(c.datasetIndex===0?' ('+fmt(D.nursing.counts[c.dataIndex])+' מקבלים)':'')}}},
+    scales:{y:{ticks:{callback:v=>v+'%'}}, x:{grid:{display:false},ticks:{font:{size:10.5}}}}}
+});
+
+/* ============ Budget ============ */
+document.getElementById('budTotal').textContent = money(D.budget_total_gross);
+document.getElementById('budTotalNet').textContent = money(D.budget_total_net);
+mkChart(document.getElementById('budgetChart'),{
+  type:'bar',
+  data:{labels:D.budget.map(b=>b.domain),
+    datasets:[
+      {label:'ברוטו', data:D.budget.map(b=>b.gross), backgroundColor:C.green, borderRadius:4},
+      {label:'נטו', data:D.budget.map(b=>b.net), backgroundColor:C.sand, borderRadius:4},
+    ]},
+  options:{...RTL, indexAxis:'y', maintainAspectRatio:false,
+    plugins:{legend:{position:'bottom',labels:{boxWidth:12,boxHeight:12}},
+      tooltip:{...tt, callbacks:{label:c=>c.dataset.label+': ₪'+money(c.parsed.x)+(c.datasetIndex===0?' ('+pct1(D.budget[c.dataIndex].pct*100)+' מהסה"כ)':'')}}},
+    scales:{x:{ticks:{callback:v=>'₪'+(v/1e6)+' מ׳'}}, y:{grid:{display:false},ticks:{font:{size:12}}}}}
+});
+
+/* senior budget table */
+const sb=[...D.senior_budget].sort((a,b)=>(b.exec||0)-(a.exec||0)||(b.plan||0)-(a.plan||0));
+document.getElementById('seniorBudgetTable').innerHTML =
+  '<thead><tr><th>תוכנית</th><th>תכנון</th><th>ביצוע</th><th>ביצוע אשתקד</th><th>ביצוע מול תכנון*</th></tr></thead><tbody>'+
+  sb.map(r=>{
+    let d='—';
+    if(r.plan && r.exec!=null){
+      const p=(r.exec-r.plan)/r.plan*100;
+      d=`<span class="${p>=0?'delta-pos':'delta-neg'}">${p>=0?'+':''}${fmt1(p)}%</span>`;
+    }
+    return `<tr><td class="name" style="white-space:normal;max-width:230px">${r.program}<br><span class="muted">${r.reg}</span></td>
+      <td>${r.plan!=null?money(r.plan):'—'}</td><td>${r.exec!=null?money(r.exec):'—'}</td><td>${r.prev!=null?money(r.prev):'—'}</td><td>${d}</td></tr>`;
+  }).join('')+'</tbody>';
+
+/* ============ Placements ============ */
+mkChart(document.getElementById('adminChart'),{
+  type:'bar',
+  data:{labels:D.placements_by_admin.map(a=>a.admin.replace('מינהל ','')),
+    datasets:[
+      {label:'בתוך המועצה', data:D.placements_by_admin.map(a=>a.inside), backgroundColor:C.green, borderRadius:3},
+      {label:'ברשויות אחרות', data:D.placements_by_admin.map(a=>a.outside), backgroundColor:C.terra, borderRadius:3},
+    ]},
+  options:{...RTL, indexAxis:'y', maintainAspectRatio:false,
+    plugins:{legend:{position:'bottom',labels:{boxWidth:12,boxHeight:12}}, tooltip:{...tt}},
+    scales:{x:{stacked:true}, y:{stacked:true, grid:{display:false},ticks:{font:{size:11.5}}}}}
+});
+const auths=D.placed_by_authority.map(a=>({...a, authority:a.authority||'לא צוין (שם חסוי)'})).slice(0,8);
+mkChart(document.getElementById('authChart'),{
+  type:'bar',
+  data:{labels:auths.map(a=>a.authority),
+    datasets:[{data:auths.map(a=>a.n), backgroundColor:auths.map(a=>a.authority==='גוש עציון'?C.green:C.terraLight), borderRadius:4}]},
+  options:{...RTL, indexAxis:'y', maintainAspectRatio:false,
+    plugins:{legend:{display:false}, tooltip:{...tt, callbacks:{label:c=>fmt(c.parsed.x)+' מושמים'}}},
+    scales:{x:{type:'logarithmic', ticks:{callback:v=>[1,10,100,650].includes(v)?fmt(v):''}}, y:{grid:{display:false},ticks:{font:{size:11.5}}}}}
+});
+document.getElementById('niSub').innerHTML = `<b>${fmt(D.ni_total.people)}</b> מקבלי גמלאות · <b>${fmt(D.ni_total.benefits)}</b> גמלאות (${D.ni_total.month})`;
+mkChart(document.getElementById('niChart'),{
+  type:'bar',
+  data:{labels:D.ni_types.map(n=>n.type),
+    datasets:[{data:D.ni_types.map(n=>n.n), backgroundColor:C.gold, borderRadius:4}]},
+  options:{...RTL, indexAxis:'y', maintainAspectRatio:false,
+    plugins:{legend:{display:false}, tooltip:{...tt, callbacks:{label:c=>fmt(c.parsed.x)+' מקבלים'}}},
+    scales:{y:{grid:{display:false},ticks:{font:{size:11.5}}}}}
+});
+
+/* frameworks table */
+document.getElementById('fwTable').innerHTML =
+  '<thead><tr><th>מסגרת</th><th>תוכנית</th><th>סוג</th><th>סידור</th><th>מינהל</th><th>סה"כ מושמים</th><th>מהמועצה</th><th>מרשויות אחרות</th></tr></thead><tbody>'+
+  D.frameworks.map(f=>`<tr><td class="name">${f.name}</td><td>${f.program}</td><td>${f.type}</td><td>${f.arrangement}</td>
+    <td style="font-size:11px">${f.admin.replace('מינהל ','')}</td><td><b>${fmt(f.total)}</b></td><td>${fmt(f.local)}</td><td>${fmt(f.other)}</td></tr>`).join('')+'</tbody>';
+
+/* ============ Tabs ============ */
+const tabBtns = document.querySelectorAll('.tab-btn');
+function showTab(id){
+  tabBtns.forEach(b=>b.classList.toggle('active', b.dataset.tab===id));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.toggle('active', p.id==='panel-'+id));
+  window.scrollTo({top:0, behavior:'instant'});
+  requestAnimationFrame(()=>{
+    allCharts.forEach(c=>{ try{ c.resize(); }catch(e){} });
+    if(id==='map'){
+      map.invalidateSize();
+      if(!mapFitted){ map.fitBounds(gBounds.pad(0.02)); mapFitted=true; }
+    }
+  });
+  history.replaceState(null,'','#'+id);
+}
+tabBtns.forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
+const validTabs = [...tabBtns].map(b=>b.dataset.tab);
+const initialTab = location.hash.replace('#','');
+if(validTabs.includes(initialTab) && initialTab!=='overview') showTab(initialTab);
+</script>
+</body>
+</html>
